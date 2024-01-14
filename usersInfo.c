@@ -1,51 +1,57 @@
 //
 // Created by serra on 1/4/2024.
 //
-
+/*
+    ██╗     ██╗██████╗ ██████╗  █████╗ ██████╗ ██╗███████╗███████╗
+    ██║     ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║██╔════╝██╔════╝
+    ██║     ██║██████╔╝██████╔╝███████║██████╔╝██║█████╗  ███████╗
+    ██║     ██║██╔══██╗██╔══██╗██╔══██║██╔══██╗██║██╔══╝  ╚════██║
+    ███████╗██║██████╔╝██║  ██║██║  ██║██║  ██║██║███████╗███████║
+    ╚══════╝╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝
+*/
 #include "usersInfo.h"
 #include "files.h"
-
-//reserva la memoria de la estructura user (userInfo)
+//reserve the memory for the struct user (userInfo)
 userInfo* createUserInfo(int numInitialAllocation){
     return (userInfo *)malloc(numInitialAllocation * sizeof (userInfo ));
 }
 
-//elimina UN user y ocupa el espacio en caso de quedar libre con el resto de los elmentos del array.
-//indexTodelete es el indice del array de users
+
+//delete a user and use the space for the rest elements of the string
+//indexTodelete is the index of the users array
 void deleteUserInfo(userInfo* users, int* numUserPairs, int indexToDelete,char* filePath,const char *masterPassword) {
     if(indexToDelete < 0 || indexToDelete > *numUserPairs){
         fprintf(stderr, "Índice de usuario a eliminar fuera de rango\n");
         exit(1);
     }
-
-    // Reorganizar el arreglo para llenar el espacio vacío
+    //reorganize the fix for fill the empty space
     for (int i = indexToDelete; i < *numUserPairs - 1; i++) {
         memcpy(&users[i],&users[i+1],sizeof(userInfo ));
     }
-    //reducimos el numero de usuarios
+    //reduce the users numbers by 1
     *numUserPairs = *numUserPairs -1;
 
-    //grabamos la nueva infomracion
+    //save the new information
     writeUserInfo(filePath,users, numUserPairs, masterPassword);
 
 }
 
 
-//solcita y rellena la nueva estrutura user
+//ask and fill the new user struct
 void fillUserInfo(userInfo *user) {
     char username[100];
     char password[100];
     fflush(stdin);
     fflush(stdout);
-    fprintf(stdout, "Introduzca los datos de la nueva cuenta");
+    fprintf(stdout, "\nIntroduce the data of the new Account");
 
 
     //Read Username
-    printf("Nombre de usuario: ");
+    printf("\nUsername: ");
     scanf("%s", username);
 
     //Read Password
-    printf("Password: ");
+    printf("\nPassword: ");
     scanf("%s", password);
 
     //Allocate memory and copy values
@@ -57,7 +63,7 @@ void fillUserInfo(userInfo *user) {
     user->password = malloc(user->password_length - 1);
 
     if (user->username == NULL || user->password == NULL) {
-        fprintf(stderr, "No se pudieron rellenar los datos del nuevo usuario\n");
+        fprintf(stderr, "ERROR: It cannot be written the data of the new user\n");
         exit(1);
     }
 
