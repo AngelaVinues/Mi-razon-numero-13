@@ -11,10 +11,13 @@
 #include "usersInfo.h"
 
 
-int writeUserInfo(char* path, const userInfo* userInfo, int* numUserPairs, const char *encryptionKey);
+int writeUserInfo(char* path, const userInfo* userInfo, const int* numUserPairs, const char *encryptionKey);
 
-userInfo* readUserInfo(char* path, int* numUserPairs, const char *encryptionKey);
+userInfo* readUserInfo(char* path, int* numUserPairs, const char *encryptionKey, int* autenticado);
 
-void XORCifrado(char* data, char* key, int dataLen, int keyLen,char* outputCifrado);
+void XORCifrado(char* data, const char* key, int dataLen, int keyLen,char* outputCifrado);
+
+
+unsigned char checksum ( char *ptr, size_t sz);
 
 #endif //ENCRYPTED_ACCOUNT_MANAGER_FILES_H

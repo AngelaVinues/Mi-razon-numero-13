@@ -19,19 +19,10 @@ typedef struct {
 } userInfo;
 
 userInfo* createUserInfo(int numInitialAllocation);
-
 void fillUserInfo(userInfo *user);
-
 void freeUserInfo(userInfo *user);
-
-
-
 void freeAllUserInfo(userInfo* user, int numUserPairs);
-
-void deleteUser(userInfo* users, int* numUserPairs, int indexToDelete,char* path,const char *encryptionKey);
-
-
-
+void deleteUserInfo(userInfo* users, int* numUserPairs, int indexToDelete,char* path,const char *encryptionKey);
 
 
 #endif //ENCRYPTED_ACCOUNT_MANAGER_USERSINFO_H

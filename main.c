@@ -25,18 +25,18 @@
 
 #define version 1.0
 #define copyright "Copyright @ Alejandro Serrano Calvo 2023"
-#define MAX 100
-#define MAX_USERNAME_SIZE 100
-#define MAX_PASSWORD_SIZE 100
+#define MAX_CHAR_SIZES 100
+#define MAX_USER_ACCOUNTS 5
+#define MAX_USERNAME_SIZE MAX_CHAR_SIZES
+#define MAX_PASSWORD_SIZE MAX_CHAR_SIZES
 
 #define program_name "Encrypted Account Manager"
-void menuIntro(char* masterUserName, char* masterPassword);
+void menuLogin(char* masterUserName, char* masterPassword);
 void setupFilePath(char* filePath,char* masterUserName);
+
 void welcomeNewUser();
 void menuMain();
-
-
-
+void askPassword(char* masterPassword);
 
 
 
@@ -45,49 +45,45 @@ int main(){
     char masterUserName[MAX_USERNAME_SIZE];
     char masterPassword[MAX_PASSWORD_SIZE];
     char filePath[MAX_USERNAME_SIZE + 10]; //+2 FOR THE ./ AND +4 FOR THE.BIN
+
+
     userInfo *readUsers = NULL;
     //numero de cuentas de un usuario
     int numUserPairs =0;
+    //el usuario ha sido autenticado: -1 no, i numero de veces que lo ha intentado
+    int autenticado = -1;
 
-    //presento el menu Login
-    menuIntro(masterUserName,masterPassword);
-    //contruyo la variable nombre archivo
-    setupFilePath(filePath,masterUserName);
 
     //leo los usuarios
-    readUsers = readUserInfo(filePath, &numUserPairs, masterPassword);
-
-    if(readUsers == NULL)
-    {
-        //no puedo leer el archivo, solo cointemnplamos nuevo usuario
-        char masterPasswordCheckAccount[MAX_PASSWORD_SIZE];
-        welcomeNewUser();
-        fprintf(stdout, "Escriba de nuevo su contraseña: ");
-        fflush(stdin);
-        fflush(stdout);
-        fgets(masterPasswordCheckAccount, MAX_PASSWORD_SIZE, stdin);
-
-        if (strcmp(masterPassword,masterPasswordCheckAccount) == 0) {
-            fprintf(stdout, "Perfecto su contraseña maestra ha sido verificada.\n");
-        }else{
-            do {
-                fprintf(stdout, "No coinciden las contraseñas.");
-                fprintf(stdout, "Introduzca una nueva contraseña:");
-                fflush(stdin);
-                fflush(stdout);
-                fgets(masterPassword, MAX_PASSWORD_SIZE, stdin);
-                fprintf(stdout, "Escriba de nuevo la password");
-                fflush(stdin);
-                fflush(stdout);
-                fgets(masterPasswordCheckAccount, MAX_PASSWORD_SIZE, stdin);
-            } while (strcmp(masterPassword, masterPasswordCheckAccount) != 0);
+    do{
+        //presento el menu Login
+        menuLogin(masterUserName,masterPassword);
+        //contruyo la variable nombre archivo con los datos del usuario
+        setupFilePath(filePath,masterUserName);
+        readUsers = readUserInfo(filePath, &numUserPairs, masterPassword, &autenticado);
+        //readUSers = NULL is el fichero no exioste o existe y la contraseña esta mal
+        //autenticado = -1 si nunca se ha comprobado la contraseña
+        //autenticado = 0 si se ha comprobado y esta bien o es un nuevop usuarios
+        //autenticado = i donde i es el numero de intentos
+        if(readUsers == NULL && autenticado == 0)
+        {
+            //new user
+            askPassword(masterPassword);
+        }
+        else if(readUsers == NULL && autenticado > 3)
+        {
+            fprintf(stdout, "\nNumero de intentos maximos fallidos %s", masterUserName);
+            return 0;
+        }
+        if(autenticado<3 && autenticado>0)
+        {
+            fprintf(stdout, "\nUsuario o contrseña no valida\n");
         }
 
-    }
-    else
-    {
-        //tengo que comprobar el checksum que me dice sila cobntraseña es buena
-    }
+    }while(autenticado!=0);
+
+
+
 
 
 
@@ -96,12 +92,15 @@ int main(){
     int allocatedUserPairs = numUserPairs;
     do {
         menuMain();
-        fscanf(stdin, "%d", &selectedOption);
+        fscanf(stdin, "%d" ,&selectedOption);
+
 
         if (selectedOption >=1 && selectedOption<=4) {
+
+            //OPCION 1 MENU
             if (selectedOption==1){
                 if(readUsers == NULL) {
-                    readUsers = readUserInfo(filePath, &numUserPairs, masterPassword);
+                    readUsers = readUserInfo(filePath, &numUserPairs, masterPassword,&autenticado);
                 }
                 if(numUserPairs >0 ){
                     //print the read data
@@ -109,7 +108,7 @@ int main(){
 
                         fprintf(stdout, "Cuenta numero %d:", i + 1);
 
-                            fprintf(stdout, "Usuario: %s\n", readUsers[i].username); //the error is here on readUsers[i]
+                            fprintf(stdout, "Usuario: %s\n", readUsers[i].username);
                         //printf("%s", readUsers[i].username);
 
 
@@ -120,30 +119,25 @@ int main(){
                     fprintf(stdout, "Aun no tienes cuentas guardadas.\n");
                 }
             }
-
-            else if (selectedOption == 2) {
-                if(allocatedUserPairs == numUserPairs){
-                    if(numUserPairs>0){
-                        readUsers= realloc(readUsers, 2* numUserPairs * sizeof(userInfo ));
-                        if(readUsers == NULL){
-                            fprintf(stderr, "No se pueden agregar mas cuentas, contacte con el desarrollador. ");
-                            return 1;
-                        }
-                    } else{
-                        allocatedUserPairs=5;
-                        readUsers = createUserInfo(allocatedUserPairs);
-                        numUserPairs = 0;
-                        if(readUsers==NULL){
-                            fprintf(stdout, "No se puede agregar mas cuentas, contacte con el desarrolaldor");
-                            return 1;
-                        }
+            //OPCION 2 MENU
+            else if (selectedOption == 2)
+            {
+                if(numUserPairs >= MAX_USER_ACCOUNTS) {
+                    fprintf(stdout, " Hemos llegado al numero maximo de cuentas, contacte con el desarrollador. ");
+                }else if(allocatedUserPairs <= 0) {
+                    //inicializamos el array de usuarios
+                    readUsers = createUserInfo(MAX_USER_ACCOUNTS);
+                    if(readUsers==NULL){
+                        fprintf(stderr, "No se pudo inicializar el array de usuarios, contacte con el desarrolaldor");
+                        return -2;
                     }
 
                 }
-
                 fillUserInfo(&readUsers[numUserPairs]);
                 numUserPairs++;
+                allocatedUserPairs = numUserPairs;
             }
+            //OPCION 3 MENU
             else if (selectedOption==3){
                 int selectedIndex = -1;
                 do {
@@ -155,27 +149,31 @@ int main(){
                     fflush(stdout);
                 } while (selectedIndex<1 || selectedIndex > numUserPairs);
 
-                deleteUser(readUsers, &numUserPairs, selectedIndex-1,filePath,masterPassword);
+                deleteUserInfo(readUsers, &numUserPairs, selectedIndex-1,filePath,masterPassword);
+                allocatedUserPairs--;
             }
+            //OPCION 4 MENU
             else if (selectedOption == 4){
                 //call teh write function
                 writeUserInfo(filePath, readUsers, &numUserPairs, masterPassword);
             }
-        } else{
+        }
+        //OPCION ERRONEA
+        else        {
             fprintf(stdout, "opcion desconocida");
         }
     } while (selectedOption !=4);
 
+
     //Llama a la funcion que esta dando problemas
-    freeAllUserInfo(readUsers,  numUserPairs);
+    //freeAllUserInfo(readUsers,  numUserPairs);
    // freeUserInfo(readUsers,numUserPairs);
 
     return 0;
 
 }
 
-
-void menuIntro(char* masterUserName, char* masterPassword)
+void menuLogin(char* masterUserName, char* masterPassword)
 {
     time_t t= time(NULL);
     struct tm tm = *localtime(&t);
@@ -194,7 +192,8 @@ void menuIntro(char* masterUserName, char* masterPassword)
     fflush(stdin);
     fflush(stdout);
     fgets(masterUserName, MAX_USERNAME_SIZE, stdin);
-    int len=masterUserName[strlen(masterUserName)-1] + '\0';
+
+    //int len=masterUserName[strlen(masterUserName)-1] + '\0';
     fflush(stdin);
     fflush(stdout);
 
@@ -267,4 +266,36 @@ void welcomeNewUser()
     fprintf(stdout, "************************************************************\n");
     fflush(stdin);
     fflush(stdout);
+}
+
+void askPassword(char* masterPassword)
+{
+    //no puedo leer el archivo, solo contemplamos nuevo usuario
+    char masterPasswordCheckAccount[MAX_PASSWORD_SIZE];
+    welcomeNewUser();
+    fprintf(stdout, "Escriba de nuevo su contraseña: ");
+    fflush(stdin);
+    fflush(stdout);
+    fgets(masterPasswordCheckAccount, MAX_PASSWORD_SIZE, stdin);
+
+    if (strcmp(masterPassword,masterPasswordCheckAccount) == 0) {
+        fprintf(stdout, "Perfecto su contraseña maestra ha sido verificada.\n");
+    }else{
+        do {
+            fprintf(stdout, "No coinciden las contraseñas.");
+            fprintf(stdout, "Introduzca una nueva contraseña:");
+            fflush(stdin);
+            fflush(stdout);
+            fgets(masterPassword, MAX_PASSWORD_SIZE, stdin);
+            fprintf(stdout, "Escriba de nuevo la password");
+            fflush(stdin);
+            fflush(stdout);
+            fgets(masterPasswordCheckAccount, MAX_PASSWORD_SIZE, stdin);
+
+        } while (strcmp(masterPassword, masterPasswordCheckAccount) != 0);
+        //quitamos el retorno de carro del final de la cadena
+        masterPassword[strlen(masterPassword)-1] = '\0';
+    }
+
+
 }
