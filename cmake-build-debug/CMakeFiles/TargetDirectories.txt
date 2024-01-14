@@ -1,0 +1,3 @@
+C:/Users/serra/OneDrive/Escritorio/Projects/Fundamentos_programacion/Account_Manager_final/cmake-build-debug/CMakeFiles/Account_Manager.dir
+C:/Users/serra/OneDrive/Escritorio/Projects/Fundamentos_programacion/Account_Manager_final/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/serra/OneDrive/Escritorio/Projects/Fundamentos_programacion/Account_Manager_final/cmake-build-debug/CMakeFiles/rebuild_cache.dir
