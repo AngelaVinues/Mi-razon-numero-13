@@ -199,10 +199,11 @@ int main(){
             //New User ask again for the password
             askPassword(masterPassword);
         }
-        else if(readUsers == NULL && authentication > 3)
+        else if(readUsers == NULL && authentication > 2)
         {
             fprintf(stdout, "\nYou don't have any more trys, GoodBye %s", masterUserName);
-            return 0; //End the program if the user trys 3 times
+            return 0;
+            //End the program if the user trys 3 times
         }
         if(authentication<3 && authentication>0)
         {
